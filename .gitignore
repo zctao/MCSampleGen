@@ -3,4 +3,5 @@
 *.pdf
 *.png
 *.root
+*.npz
 MG5_aMC

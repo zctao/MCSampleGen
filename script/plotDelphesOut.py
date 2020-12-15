@@ -1,26 +1,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import os
 from ROOT import TFile, TChain, TLorentzVector
 import DelphesAnalysis.Delphes as Delphes
 
 from histograms import HistogramsTTbar
 from partonHistory import getTopAfterFSR, getAntiTopAfterFSR, isHadronicTop
-from delphesAnalyzer import passEventSelection
-
-def getFileList(inputFiles):
-    if isinstance(inputFiles, list):
-        files = []
-        for infile in inputFiles:
-            files += getFileList(infile)
-    elif os.path.isdir(inputFiles):
-        files = [os.path.join(inputFiles, fname) for fname in os.listdir(inputFiles) if fname.endswith('.root')]
-    elif os.path.isfile(inputFiles):
-        files = [inputFiles]
-    else:
-        files = []
-
-    return files
+from delphesAnalyzer import passEventSelection, getFileList
 
 def plotDelphesOut(inputFiles, outputFile, weighted=True, applyCuts=False):
     # inputs

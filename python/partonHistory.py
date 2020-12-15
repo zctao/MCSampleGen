@@ -40,12 +40,8 @@ def getTopAfterFSR(particleCollection):
 def getAntiTopAfterFSR(particleCollection):
     return getGenParticle(-6, particleCollection, afterFSR=True)
 
-def isHadronicTop(top, particleCollection):
-    assert(abs(top.PID)==6)
-
-    # get the W boson from top decay
+def getWfromTopDecay(top, particleCollection, afterFSR=False):
     Wboson = None
-
     for index in range(top.D1, top.D2+1):
         if index < 0:
             continue
@@ -55,16 +51,28 @@ def isHadronicTop(top, particleCollection):
         if abs(daughter.PID) == 6:
             # get the top after FSR i.e. the last top
             tlast = getAfterFSR(top, particleCollection)
-            return isHadronicTop(top, particleCollection)
+            return getWfromTopDecay(tlast, particleCollection, afterFSR)
         elif abs(daughter.PID) == 24:
             Wboson = daughter
             break
 
+    if Wboson is None:
+        return Wboson
+    elif not afterFSR:
+        return Wboson
+    else:
+        Wlast = getAfterFSR(Wboson, particleCollection)
+        return Wlast
+
+def isHadronicTop(top, particleCollection):
+    assert(abs(top.PID)==6)
+
+    # get the W boson from top decay
+    Wboson = getWfromTopDecay(top, particleCollection, afterFSR=True)
     assert(Wboson is not None)
-    Wlast = getAfterFSR(Wboson, particleCollection)
 
     # get the first daughter of W
-    Wdaughter = particleCollection[Wlast.D1]
+    Wdaughter = particleCollection[Wboson.D1]
 
     if abs(Wdaughter.PID) >= 11 and abs(Wdaughter.PID) <=14:
         return False

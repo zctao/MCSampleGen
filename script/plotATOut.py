@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# script to make the same set of histograms as plotDelphesOut.C from AnalysisTop output file
+# script to make the same set of histograms as plotDelphesOut.py from AnalysisTop output file
 
 from ROOT import gROOT, TFile, TLorentzVector, TH1, TH1F, TH2F
 gROOT.SetBatch(True)
