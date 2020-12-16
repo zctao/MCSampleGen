@@ -113,7 +113,7 @@ njmax      = -1       # Maximal multiplicity in the merging.
 # W+ -> vl l+, W- -> jj
 DM_1 = 24:onMode = off
 DM_2 = 24:onPosIfAny = 11 12 13 14
-DM_4 = 24:onNegIfAny = 1 2 3 4
+DM_3 = 24:onNegIfAny = 1 2 3 4
 
 #***********************************************************************
 # Extra libraries/analyses                                             *
@@ -128,7 +128,7 @@ DM_4 = 24:onNegIfAny = 1 2 3 4
 extralibs = pythia8 boost_iostreams z dl stdc++ # Extra-libraries (not LHAPDF) 
                                  # Default: "stdhep Fmcfio"
                                  # PYTHIA > 8.200 may require library dl
-extrapaths = ../lib /home/ztao/MCSampleGen/MG5_aMC_v2_8_2/HEPTools/pythia8//lib /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc8-opt/lib /home/ztao/MCSampleGen/MG5_aMC_v2_8_2/HEPTools/zlib/lib # Path to the extra-libraries
+extrapaths = ../lib /home/ztao/MCSampleGen/MG5_aMC/HEPTools/pythia8//lib /cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc8-opt/lib /home/ztao/MCSampleGen/MG5_aMC/HEPTools/zlib/lib # Path to the extra-libraries
                                  # Default: "../lib"
 INCLUDEPATHS =                   # Path to header files needed by c++
                                  # Dir names separated by white spaces
