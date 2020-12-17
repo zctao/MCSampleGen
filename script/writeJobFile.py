@@ -50,6 +50,8 @@ if [ ! -d "$BatchOutput" ]; then
 fi
 
 # move to the local disk of the node
+if [ ! -v PBS_JOBID ]; then PBS_JOBID=42; fi
+if [ ! -v PBS_ARRAYID ]; then PBS_ARRAYID=0; fi
 TmpWorkDir=/tmp/${USER}/${PBS_JOBID}
 mkdir -p ${TmpWorkDir}
 cd ${TmpWorkDir}
