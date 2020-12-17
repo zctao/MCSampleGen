@@ -16,6 +16,8 @@ parser.add_argument("-p", "--ncores", type=int, default=None,
                     help="Number of cores per job. (None = all)")
 parser.add_argument("-m", "--mode", choices=['LO','NLO'], default='NLO',
                     help="Lead Order or Next to Leading Order")
+parser.add_argument("-d", "--madspin-card", dest="madspin_card", type=str,
+                    help="Madspin card file path")
 parser.add_argument("-c", "--shower-card", dest='shower_card', type=str,
                     help="Shower card file path")
 parser.add_argument("-f", "--filename", default='generateTTbar.sh',
@@ -37,33 +39,33 @@ setup_template = """#!/bin/bash
 # set up environment
 source ${HOME}/MCSampleGen/setupEnv.sh
 echo MCSampleGen_Dir=${MCSampleGen_Dir}
+echo "PWD = $PWD"
+
+BatchOutput=`realpath %(outdir)s/%(name)s`
+# check output directory exists
+if [ ! -d "$BatchOutput" ]; then
+    echo "WARNING: Output directory $BatchOutput does not exist!"
+    echo "Create directory $BatchOutput"
+    mkdir -p $BatchOutput
+fi
 
 # move to the local disk of the node
-cd /tmp
-mkdir -p ${PBS_JOBID}
-cd ${PBS_JOBID}
-echo "PWD = $PWD"
-TMP_OutDir=${PWD}/output
-mkdir -p ${TMP_OutDir}
+TmpWorkDir=/tmp/${USER}/${PBS_JOBID}
+mkdir -p ${TmpWorkDir}
+cd ${TmpWorkDir}
+echo "Work directory: $TmpWorkDir"
 
 nevents=%(nevents)s
 echo "Generate $nevents events"
 
 seed=${RANDOM}
 echo "seed = $seed"
-
-BatchOutput=%(outdir)s/%(name)s
-# check output directory exists
-if [ ! -d "$BatchOutput" ]; then
-    echo "WARNING: Output directory $BatchOutput does not exist!"
-    mkdir -p $BatchOutput
-fi
 """
 
 nlo_template = """
 # write MG5_aMC run file
 echo 'Write MC5_aMC run file'
-python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m NLO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -c %(shower_card)s -o ${TMP_OutDir}/%(name)s -f runMG5.txt
+python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m NLO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
 
 # run MG5_aMC
 echo 'Start running mg5_aMC'
@@ -71,18 +73,21 @@ python ${MCSampleGen_Dir}/MG5_aMC/bin/mg5_aMC runMG5.txt
 
 # run Delphes
 Delphes_Dir=${MCSampleGen_Dir}/MG5_aMC/Delphes
-echo 'unzip hepmc file'
-gunzip ${TMP_OutDir}/%(name)s/Events/run_${seed}/events_PYTHIA8_0.hepmc.gz
+file_hepmc="$TmpWorkDir/%(name)s/Events/%(runoutdir)s/events_PYTHIA8_0.hepmc"
+file_hepmcgz="$file_hepmc".gz
+echo "Unzip hepmc file: $file_hepmcgz"
+gunzip $file_hepmcgz
 echo 'Start running DelphesHepMC'
-${Delphes_Dir}/DelphesHepMC ${Delphes_Dir}/cards/delphes_card_CMS.tcl ${TMP_OutDir}/%(tag)s_delphes_events_${PBS_ARRAYID}.root ${TMP_OutDir}/%(name)s/Events/run_${seed}/events_PYTHIA8_0.hepmc
+file_delphes=${TmpWorkDir}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
+${Delphes_Dir}/DelphesHepMC ${Delphes_Dir}/cards/delphes_card_CMS.tcl $file_delphes $file_hepmc
 
 # copy the output to storage
-echo 'Transfer Delphes output root file'
-cp ${TMP_OutDir}/%(tag)s_delphes_events_${PBS_ARRAYID}.root ${BatchOutput}/.
+echo "Copy Delphes output file $file_delphes to $BatchOutput"
+cp ${file_delphes} ${BatchOutput}/.
 # only copy madgraph file from one of the job
 if [ "$PBS_ARRAYID" -eq "0" ]; then
-    #echo "Transfer MadGraph directory $TMP_OutDir/%(name)s"
-    #cp -r $TMP_OutDir/%(name)s ${BatchOutput}/
+    #echo "Transfer MadGraph directory ${TmpWorkDir}/%(name)s"
+    #cp -r ${TmpWorkDir}/%(name)s ${BatchOutput}/
     cp runMG5.txt ${BatchOutput}/.
 fi
 
@@ -92,19 +97,20 @@ fi
 lo_template = """
 # write MadGraph run file
 echo 'Write MC5_aMC run file'
-python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -c %(shower_card)s -o ${TMP_OutDir}/%(name)s -f runMG5.txt
+python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
 
 # run MadGraph and Delphes
 echo 'Start running mg5_aMC'
 python ${MCSampleGen_Dir}/MG5_aMC/bin/mg5_aMC runMG5.txt
 
 # copy the output to storage
-echo 'Transfer Delphes output root file'
-cp ${TMP_OutDir}/%(name)s/Events/run_${seed}/%(tag)s_delphes_events.root ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
+file_delphes=${TmpWorkDir}/%(name)s/Events/%(runoutdir)s/%(tag)s_delphes_events.root
+echo "Copy Delphes output file $file_delphes to ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root"
+cp $file_delphes ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
 # only copy madgraph file from one of the job
 if [ "$PBS_ARRAYID" -eq "0" ]; then
-    #echo "Transfer MadGraph directory $TMP_OutDir/%(name)s"
-    #cp -r $TMP_OutDir/%(name)s ${BatchOutput}/
+    #echo "Transfer MadGraph directory ${TmpWorkDir}/%(name)s"
+    #cp -r ${TmpWorkDir}/%(name)s ${BatchOutput}/
     cp runMG5.txt ${BatchOutput}/.
 fi
 
@@ -132,9 +138,17 @@ if args.tag:
 else:
     vd['tag'] = args.name
 
+if args.madspin_card:
+    assert(os.path.isfile(args.madspin_card))
+    vd['decay_card'] = os.path.abspath(args.madspin_card)
+    vd['runoutdir'] = 'run_${seed}_decayed_1'
+else:
+    vd['decay_card'] = "''"
+    vd['runoutdir'] = 'run_${seed}'
+
 if args.shower_card:
     assert(os.path.isfile(args.shower_card))
-    vd['shower_card'] = args.shower_card
+    vd['shower_card'] = os.path.abspath(args.shower_card)
 else:
     vd['shower_card'] = "''"
 
@@ -147,5 +161,5 @@ else:
 foutput.close()
 
 print("Create job file:", args.filename)
-print("Submit to the cluster:")
+print("To submit the job to cluster:")
 print("qsub -l walltime=<hh:mm:ss>", args.filename)

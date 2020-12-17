@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -11,7 +12,7 @@ parser.add_argument('-f', '--filename', default='run_mg5_aMC.txt',
                     help="Name of the text file written by this script")
 parser.add_argument('-s', '--seed', default=0,
                     help="Random number generator seed for MadGraph")
-parser.add_argument('-p', '--ncores', default=None, type=int,
+parser.add_argument('-p', '--ncores', default=None,
                     help="number of cores")
 parser.add_argument('-o', '--runoutdir', default='.',
                     help="Output directory for mg5_aMC run")
@@ -19,6 +20,8 @@ parser.add_argument('-r', '--runname', default='run_tt',
                     help="Run name")
 parser.add_argument('-t', '--tagname', default='tag_1',
                     help="Tag name")
+parser.add_argument('-d', '--madspin-card', dest='madspin_card', default=None,
+                    help="Madspin card file path")
 parser.add_argument('-c', '--shower-card', dest='shower_card', default=None,
                     help="Shower card file path")
 
@@ -34,11 +37,14 @@ generate p p > t t~ [QCD]
 output %(outputdir)s
 launch -n %(run_name)s
 shower = PYTHIA8
+%(madspin_switch)s
 #order = NLO
+done
 set run_card nevents %(nevents)s
 set run_card iseed %(rng_seed)s
 set run_card run_tag %(tag_name)s
 #set param_card MT 172
+%(madspin_card)s
 %(shower_card)s
 done
 """
@@ -54,11 +60,14 @@ output %(outputdir)s
 launch -n %(run_name)s
 shower = Pythia8
 detector = Delphes
+%(madspin_switch)s
 analysis = OFF
+done
 set run_card nevents %(nevents)s
 set run_card iseed %(rng_seed)s
 set run_card run_tag %(tag_name)s
 #set param_card MT 172
+%(madspin_card)s
 %(shower_card)s
 done
 """
@@ -70,8 +79,17 @@ vd['outputdir'] = args.runoutdir
 vd['run_name'] = args.runname
 vd['tag_name'] = args.tagname
 
+if args.madspin_card:
+    assert(os.path.isfile(args.madspin_card))
+    vd['madspin_switch'] = 'madspin = ON'
+    vd['madspin_card'] = os.path.abspath(args.madspin_card)
+else:
+    vd['madspin_switch'] = '#'
+    vd['madspin_card'] = '#'
+
 if args.shower_card:
-    vd['shower_card'] = args.shower_card
+    assert(os.path.isfile(args.shower_card))
+    vd['shower_card'] = os.path.abspath(args.shower_card)
 else:
     vd['shower_card'] = '#'
 
