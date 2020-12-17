@@ -5,3 +5,5 @@
 *.root
 *.npz
 MG5_aMC
+test/*
+config/*
