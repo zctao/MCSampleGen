@@ -8,14 +8,16 @@ from partonHistory import getTopAfterFSR, getAntiTopAfterFSR, isHadronicTop
 from delphesAnalyzer import passEventSelection, getFileList
 
 def plotDelphesOut(inputFiles, outputFile, weighted=True, applyCuts=False):
+    print("plotDelphesOut")
     # inputs
     files = getFileList(inputFiles)
 
     chain = TChain("Delphes")
     for infile in files:
         chain.Add(infile)
+        print("Add {} to TChain".format(infile))
     nevents = chain.GetEntries()
-    #print(nevents)
+    print("Total number of events:", nevents)
 
     # output
     foutput = TFile(outputFile, "RECREATE")
@@ -24,7 +26,11 @@ def plotDelphesOut(inputFiles, outputFile, weighted=True, applyCuts=False):
     histsToPlot = HistogramsTTbar()
 
     # loop over events
-    for event in chain:
+    ievent = 0
+    for ievt, event in enumerate(chain):
+        if not ievt%10000:
+            print("processing event", ievt)
+
         if applyCuts and not passEventSelection(event):
             continue
 
