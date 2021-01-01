@@ -24,6 +24,8 @@ parser.add_argument("-f", "--filename", default='generateTTbar.sh',
                     help="Name of the job file to be submitted")
 parser.add_argument("-t", "--tag", default=None,
                     help="Tag name")
+parser.add_argument("--pileup", type=str,
+                    help="Path to the pileup file for Delphes")
 
 args = parser.parse_args()
 
@@ -81,7 +83,8 @@ echo "Unzip hepmc file: $file_hepmcgz"
 gunzip $file_hepmcgz
 echo 'Start running DelphesHepMC'
 file_delphes=${TmpWorkDir}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
-${Delphes_Dir}/DelphesHepMC ${Delphes_Dir}/cards/delphes_card_CMS.tcl $file_delphes $file_hepmc
+%(copy_minbias)s
+${Delphes_Dir}/DelphesHepMC %(delphes_card)s $file_delphes $file_hepmc
 
 # copy the output to storage
 echo "Copy Delphes output file $file_delphes to $BatchOutput"
@@ -99,9 +102,10 @@ fi
 lo_template = """
 # write MadGraph run file
 echo 'Write MC5_aMC run file'
-python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
+python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s --delphes-card %(delphes_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
 
 # run MadGraph and Delphes
+%(copy_minbias)s
 echo 'Start running mg5_aMC'
 python ${MCSampleGen_Dir}/MG5_aMC/bin/mg5_aMC runMG5.txt
 
@@ -118,6 +122,10 @@ fi
 
 #exit
 """
+parser.add_argument("--delphes-card", dest='delphes_card', type=str,
+                    default='${Delphes_Dir}/cards/delphes_card_CMS.tcl',
+                    help="Delphes card file path")
+
 joboutdir = os.path.join(args.outdir, args.name)
 if not os.path.isdir(joboutdir):
     print("Create directory", joboutdir)
@@ -153,6 +161,16 @@ if args.shower_card:
     vd['shower_card'] = os.path.abspath(args.shower_card)
 else:
     vd['shower_card'] = "''"
+
+# Delphes card and pileup file
+if args.pileup:
+    assert(os.path.isfile(args.pileup))
+    filepath_pileup = os.path.abspath(args.pileup)
+    vd['delphes_card'] = '${Delphes_Dir}/cards/delphes_card_CMS_PileUp.tcl'
+    vd['copy_minbias'] = 'cp {} .'.format(filepath_pileup)
+else:
+    vd['delphes_card'] = '${Delphes_Dir}/cards/delphes_card_CMS.tcl'
+    vd['copy_minbias'] = '#'
 
 foutput = open(args.filename, 'w')
 foutput.write(setup_template % vd)

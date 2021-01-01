@@ -24,6 +24,8 @@ parser.add_argument('-d', '--madspin-card', dest='madspin_card', default=None,
                     help="Madspin card file path")
 parser.add_argument('-c', '--shower-card', dest='shower_card', default=None,
                     help="Shower card file path")
+parser.add_argument('--delphes-card', dest='delphes_card', default=None,
+                    help="Delphes card file path for LO mode")
 
 args = parser.parse_args()
 
@@ -69,6 +71,7 @@ set run_card run_tag %(tag_name)s
 #set param_card MT 172
 %(madspin_card)s
 %(shower_card)s
+%(delphes_card)s
 done
 """
 
@@ -92,6 +95,12 @@ if args.shower_card:
     vd['shower_card'] = os.path.abspath(args.shower_card)
 else:
     vd['shower_card'] = '#'
+
+if args.delphes_card:
+    assert(os.path.isfile(args.delphes_card))
+    vd['delphes_card'] = os.path.abspath(args.delphes_card)
+else:
+    vd['delphes_card'] = '#'
 
 if args.ncores:
     vd['number_cores'] = args.ncores
