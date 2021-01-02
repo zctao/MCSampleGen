@@ -45,6 +45,8 @@ done
 set run_card nevents %(nevents)s
 set run_card iseed %(rng_seed)s
 set run_card run_tag %(tag_name)s
+set pdlabel lhapdf
+set lhaid 260000 # NNPDF30_nlo_as_0118
 #set param_card MT 172
 %(madspin_card)s
 %(shower_card)s
@@ -68,6 +70,8 @@ done
 set run_card nevents %(nevents)s
 set run_card iseed %(rng_seed)s
 set run_card run_tag %(tag_name)s
+set pdlabel lhapdf
+set lhaid 260000 # NNPDF30_nlo_as_0118
 #set param_card MT 172
 %(madspin_card)s
 %(shower_card)s
