@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import time
 import numpy as np
 import ROOT
 from ROOT import TChain, TTree, TFile, TLorentzVector
@@ -84,7 +85,7 @@ def getFileList(inputFiles):
 
     return files
 
-def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", makeNumpyArray=True):
+def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayFormat=None):
     # inputs
     infiles = getFileList(inputFiles)
 
@@ -102,7 +103,10 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", makeNumpy
     variables.set_up_branches(tree)
 
     # loop over events
-    for event in chain:
+    t_tree_start = time.time()
+    for ievt, event in enumerate(chain):
+        if not ievt%10000:
+            print("processing event {}/{}".format(ievt, nevents))
 
         if not passEventSelection(event):
             continue
@@ -231,16 +235,34 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", makeNumpy
 
         tree.Fill()
 
+    t_tree_done = time.time()
+    print("Making flat nutple took {:.2f} seconds ({:.3f} ms/event)".format(t_tree_done-t_tree_start, (t_tree_done-t_tree_start)*1000/nevents))
+
+    print("Finish writing tree to file")
     foutput.Write()
 
-    if makeNumpyArray:
+    if arrayFormat is not None:
+        print("Save tree as array")
+        # convert tree to array
         import resource
         ROOT.ROOT.EnableImplicitMT()
         usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        print("Current RAM usage: ", usage)
-        print("Save tree as numpy array")
-        df = ROOT.RDataFrame(tree)
-        ntuple_arr = df.AsNumpy()
+        print("Current RAM usage: {:.3f} GB".format(usage*1e-6))
+        t_arr_start = time.time()
+
+        ntuple_arr_dict = ROOT.RDataFrame(tree).AsNumpy()
+
+        t_arr_done = time.time()
+        print("Converting TTree took {:.2f} seconds".format(t_arr_done-t_arr_start))
         usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        print("Current RAM usage: ", usage)
-        np.savez(outputname+'.npz', **ntuple_arr)
+        print("Current RAM usage: {:.3f} GB".format(usage*1e-6))
+
+        if arrayFormat == "npz":
+            np.savez(outputname+'.npz', **ntuple_arr)
+        elif arrayFormat == "h5":
+            import h5py
+            with h5py.File(outputname+'.h5', 'w') as hf:
+                for var_name, var_arr in ntuple_arr_dict.items():
+                    hf.create_dataset(var_name, data=var_arr)
+        else:
+            raise RuntimeError("Current supported format: 'npz' or 'h5'")
