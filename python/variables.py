@@ -209,3 +209,6 @@ class varTTbarLJets():
 
         self.met_met[0] = -5000.
         self.met_phi[0] = -5000.
+
+    def get_variable_names(self):
+        return [var for var in dir(self) if not callable(getattr(self, var)) and not var.startswith("__")]
