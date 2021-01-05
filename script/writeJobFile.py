@@ -82,44 +82,45 @@ file_hepmcgz="$file_hepmc".gz
 echo "Unzip hepmc file: $file_hepmcgz"
 gunzip $file_hepmcgz
 echo 'Start running DelphesHepMC'
-file_delphes=${TmpWorkDir}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
+file_delphes=${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
 %(copy_minbias)s
 ${Delphes_Dir}/DelphesHepMC %(delphes_card)s $file_delphes $file_hepmc
 
-# copy the output to storage
-echo "Copy Delphes output file $file_delphes to $BatchOutput"
-cp ${file_delphes} ${BatchOutput}/.
-# only copy madgraph file from one of the job
+# Copy MadGraph run script from only the first job since they are identical
+echo 'Copy MadGraph script to the output directory'
 if [ "$PBS_ARRAYID" -eq "0" ]; then
-    #echo "Transfer MadGraph directory ${TmpWorkDir}/%(name)s"
-    #cp -r ${TmpWorkDir}/%(name)s ${BatchOutput}/
     cp runMG5.txt ${BatchOutput}/.
 fi
 
+# Clean up
+rm -rf ${TmpWorkDir}
 #exit
 """
 
 lo_template = """
 # write MadGraph run file
 echo 'Write MC5_aMC run file'
-python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s --delphes-card %(delphes_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
+python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m LO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s --delphes-card %(delphes_card)s -o ${BatchOutput}/%(name)s_${PBS_ARRAYID} -f runMG5.txt
 
 # run MadGraph and Delphes
 %(copy_minbias)s
 echo 'Start running mg5_aMC'
 python ${MCSampleGen_Dir}/MG5_aMC/bin/mg5_aMC runMG5.txt
 
+# Move the output file
 # copy the output to storage
-file_delphes=${TmpWorkDir}/%(name)s/Events/%(runoutdir)s/%(tag)s_delphes_events.root
-echo "Copy Delphes output file $file_delphes to ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root"
-cp $file_delphes ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
-# only copy madgraph file from one of the job
+file_delphes=${BatchOutput}/%(name)s_${PBS_ARRAYID}/Events/%(runoutdir)s/%(tag)s_delphes_events.root
+echo "Move Delphes output file $file_delphes to ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root"
+mv $file_delphes ${BatchOutput}/%(tag)s_delphes_events_${PBS_ARRAYID}.root
+
+# Copy MadGraph run script from only the first job since they are identical
+echo 'Copy MadGraph script to the output directory'
 if [ "$PBS_ARRAYID" -eq "0" ]; then
-    #echo "Transfer MadGraph directory ${TmpWorkDir}/%(name)s"
-    #cp -r ${TmpWorkDir}/%(name)s ${BatchOutput}/
     cp runMG5.txt ${BatchOutput}/.
 fi
 
+# Clean up
+rm -rf ${TmpWorkDir}
 #exit
 """
 parser.add_argument("--delphes-card", dest='delphes_card', type=str,
