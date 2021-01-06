@@ -125,6 +125,7 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
         t_p4 = TLorentzVector()
         t_p4.SetPxPyPzE(t_afterFSR.Px, t_afterFSR.Py, t_afterFSR.Pz, t_afterFSR.E)
         t_ishadronic = isHadronicTop(t_afterFSR, event.Particle)
+        variables.t_ishadronic[0] = t_ishadronic
 
         W_fromT = getWfromTopDecay(t_afterFSR, event.Particle, afterFSR=True)
         W_fromT_p4 = TLorentzVector()
@@ -135,6 +136,7 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
         tbar_p4 = TLorentzVector()
         tbar_p4.SetPxPyPzE(tbar_afterFSR.Px, tbar_afterFSR.Py, tbar_afterFSR.Pz, tbar_afterFSR.E)
         tbar_ishadronic = isHadronicTop(tbar_afterFSR, event.Particle)
+        variables.tbar_ishadronic[0] = tbar_ishadronic
 
         W_fromTbar = getWfromTopDecay(tbar_afterFSR, event.Particle, afterFSR=True)
         W_fromTbar_p4 = TLorentzVector()
@@ -188,13 +190,21 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
             variables.lep_pt[0] = event.Electron[0].PT
             variables.lep_eta[0] = event.Electron[0].Eta
             variables.lep_phi[0] = event.Electron[0].Phi
+            variables.lep_pdgid[0] = -11*event.Electron[0].Charge
         elif passMuonCuts(event) and not passElectronCuts(event):
             variables.lep_pt[0] = event.Muon[0].PT
             variables.lep_eta[0] = event.Muon[0].Eta
             variables.lep_phi[0] = event.Muon[0].Phi
+            variables.lep_pdgid[0] = -13*event.Muon[0].Charge
 
         # jets
+        variables.njets[0] = 0
+        variables.njets25[0] = 0
         for i, jet in enumerate(event.Jet):
+            variables.njets[0] += 1
+            if jet.PT > 25.:
+                variables.njets25[0] += 1
+
             if i==0:
                 variables.j1_pt[0] = jet.PT
                 variables.j1_eta[0] = jet.Eta

@@ -5,6 +5,9 @@ class varTTbarLJets():
         # event weight
         self.w = np.empty((1), dtype="float32")
         # partons
+        ##
+        self.t_ishadronic = np.empty((1), dtype="int")
+        self.tbar_ishadronic = np.empty((1), dtype="int")
         ## hadronic top
         self.th_pt = np.empty((1), dtype="float32")
         self.th_eta = np.empty((1), dtype="float32")
@@ -36,7 +39,10 @@ class varTTbarLJets():
         self.lep_pt = np.empty((1), dtype="float32")
         self.lep_eta = np.empty((1), dtype="float32")
         self.lep_phi = np.empty((1), dtype="float32")
+        self.lep_pdgid = np.empty((1), dtype="int")
         ## jets
+        self.njets = np.empty((1), dtype="int")
+        self.njets25 = np.empty((1), dtype="int")
         self.j1_pt = np.empty((1), dtype="float32")
         self.j1_eta = np.empty((1), dtype="float32")
         self.j1_phi = np.empty((1), dtype="float32")
@@ -74,6 +80,9 @@ class varTTbarLJets():
     def set_up_branches(self, tree):
         tree.Branch("w", self.w, "w/F")
 
+        tree.Branch("t_ishadronic", self.t_ishadronic, "t_ishadronic/I")
+        tree.Branch("tbar_ishadronic", self.tbar_ishadronic, "tbar_ishadronic/I")
+
         tree.Branch("th_pt", self.th_pt, "th_pt/F")
         tree.Branch("th_eta", self.th_eta, "th_eta/F")
         tree.Branch("th_y", self.th_y, "th_y/F")
@@ -103,6 +112,10 @@ class varTTbarLJets():
         tree.Branch("lep_pt", self.lep_pt, "lep_pt/F")
         tree.Branch("lep_eta", self.lep_eta, "lep_eta/F")
         tree.Branch("lep_phi", self.lep_phi, "lep_phi/F")
+        tree.Branch("lep_pdgid", self.lep_pdgid, "lep_pdgid/I")
+
+        tree.Branch("njets", self.njets, "njets/I")
+        tree.Branch("njets25", self.njets25, "njets25/I")
 
         tree.Branch("j1_pt", self.j1_pt, "j1_pt/F")
         tree.Branch("j1_eta", self.j1_eta, "j1_eta/F")
@@ -146,6 +159,9 @@ class varTTbarLJets():
     def set_default(self):
         self.w[0] = -5000.
 
+        self.t_ishadronic[0] = -5000
+        self.tbar_ishadronic[0] = -5000
+
         self.th_pt[0] = -5000.
         self.th_eta[0] = -5000.
         self.th_y[0] = -5000.
@@ -175,7 +191,10 @@ class varTTbarLJets():
         self.lep_pt[0] = -5000.
         self.lep_eta[0] = -5000.
         self.lep_phi[0] = -5000.
+        self.lep_pdgid[0] = -5000
 
+        self.njets[0] = -5000
+        self.njets25[0] = -5000
         self.j1_pt[0] = -5000.
         self.j1_eta[0] = -5000.
         self.j1_phi[0] = -5000.
@@ -196,7 +215,7 @@ class varTTbarLJets():
         self.j4_phi[0] = -5000.
         self.j4_m[0] = -5000.
         self.j4_isbtag[0] = -5000.
-        self.j5_pt = np.empty((1),  dtype="float32")
+        self.j5_pt[0] = -5000.
         self.j5_eta[0] = -5000.
         self.j5_phi[0] = -5000.
         self.j5_m[0] = -5000.
