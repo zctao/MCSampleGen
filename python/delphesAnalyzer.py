@@ -85,7 +85,7 @@ def getFileList(inputFiles):
 
     return files
 
-def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayFormat=None):
+def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayFormat=None, maxevents=None):
     # inputs
     infiles = getFileList(inputFiles)
 
@@ -105,6 +105,9 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
     # loop over events
     t_tree_start = time.time()
     for ievt, event in enumerate(chain):
+        if maxevents is not None and ievt >= maxevents:
+            break
+
         if not ievt%10000:
             print("processing event {}/{}".format(ievt, nevents))
 
