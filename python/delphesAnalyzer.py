@@ -48,11 +48,6 @@ def passMuonCuts(event):
 
 def passEventSelection(event, channel='ttbar_ljets'):
     if channel=='ttbar_ljets':
-        # MET > 20 GeV
-        if not passMETCuts(event):
-            return False
-        # MET + MWT > 60. ?
-
         # NJets >= 4
         # Jet Pt > 25 GeV
         # NBtag >= 2
@@ -70,6 +65,32 @@ def passEventSelection(event, channel='ttbar_ljets'):
         return True
     else:
         return True
+
+def isBoostedTop(event, hadTop_p4=None, minPt=200., maxDR=0.4):
+    # categorize the event as boosted if there is a large R jet matched to top
+    # LargeR jet pT > 200 GeV from Delphes
+    for ljet in event.FatJet:
+        # pT cut on large R jet
+        if ljet.PT < minPt:
+            continue
+
+        # large R jet mass window: [120, 220] GeV
+        if ljet.Mass < 120. or ljet.Mass > 220.:
+            continue
+
+        # match the large jet with the hadronic top parton by dR
+        if hadTop_p4 is not None:
+            ljet_p4 = TLorentzVector()
+            ljet_p4.SetPtEtaPhiM(ljet.PT, ljet.Eta, ljet.Phi, ljet.Mass)
+            dR = ljet_p4.DeltaR(hadTop_p4)
+            if dR > maxDR:
+                continue
+
+        # ljet is matched to the hadronic top
+        return True
+
+    # None of the large R jets meet the requirements
+    return False
 
 def getFileList(inputFiles):
     if isinstance(inputFiles, list):
@@ -106,6 +127,7 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
     t_tree_start = time.time()
     for ievt, event in enumerate(chain):
         if maxevents is not None and ievt >= maxevents:
+            print("maxevents:", maxevents)
             break
 
         if not ievt%10000:
@@ -154,6 +176,10 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
             tl_p4 = t_p4
             wh_p4 = W_fromTbar_p4
             wl_p4 = W_fromT_p4
+
+        # veto events in boosted category
+        if isBoostedTop(event, th_p4):
+            continue
 
         if th_p4 is not None:
             variables.th_pt[0] = th_p4.Pt()
