@@ -16,15 +16,15 @@ def passJetCuts(event):
     # NJets >= 4 and pT > 25 GeV
     nJet25 = 0
     # NBtag >= 2
-    nBtags = 0
+    #nBtags = 0
 
     for jet in event.Jet:
         if jet.PT > 25.:
             nJet25 += 1
-            if jet.BTag:
-                nBtags += 1
+            #if jet.BTag:
+            #    nBtags += 1
 
-    return nJet25 >= 4 and nBtags >= 2
+    return nJet25 >= 4 #and nBtags >= 2
 
 def passElectronCuts(event):
     #Exactly one electron with pt > 25 GeV
@@ -178,8 +178,8 @@ def makeNtuple_ttbar_ljets(inputFiles, outputname, treename="Delphes", arrayForm
             wl_p4 = W_fromT_p4
 
         # veto events in boosted category
-        if isBoostedTop(event, th_p4):
-            continue
+        #if isBoostedTop(event, th_p4):
+        #    continue
 
         if th_p4 is not None:
             variables.th_pt[0] = th_p4.Pt()

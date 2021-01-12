@@ -6,7 +6,7 @@
 
 #!/bin/bash
 #PBS -t 0-4
-#PBS -o /home/ztao/data/batch_output/MCSampleGen/20210105/ntuples/${PBS_JOBID}.out
+#PBS -o /home/ztao/data/batch_output/MCSampleGen/20210105/ntuplesv2/${PBS_JOBID}.out
 #PBS -j oe
 #PBS -m abe
 #PBS -M ztao@phas.ubc.ca
@@ -49,7 +49,7 @@ done
 #echo $inputfiles
 
 # output directory
-outdir="$sample_dir/ntuples"
+outdir="$sample_dir/ntuplesv2"
 if [ ! -d "$outdir" ]; then
     echo "Create directory $outdir"
     mkdir -p $outdir
