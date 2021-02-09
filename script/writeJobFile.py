@@ -16,6 +16,9 @@ parser.add_argument("-p", "--ncores", type=int, default=None,
                     help="Number of cores per job. (None = all)")
 parser.add_argument("-m", "--mode", choices=['LO','NLO'], default='NLO',
                     help="Lead Order or Next to Leading Order")
+parser.add_argument('-e', '--event-type', dest='event_type',
+                    choices=['ttbar', 'zprime'], default='ttbar',
+                    help="Which kind of events to generate")
 parser.add_argument("-d", "--madspin-card", dest="madspin_card", type=str,
                     help="Madspin card file path")
 parser.add_argument("-c", "--shower-card", dest='shower_card', type=str,
@@ -69,7 +72,7 @@ echo "seed = $seed"
 nlo_template = """
 # write MG5_aMC run file
 echo 'Write MC5_aMC run file'
-python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m NLO -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
+python ${MCSampleGen_Dir}/script/writeMGRun.py ${nevents} -m NLO -e %(event_type)s -s ${seed} -p %(ncores)s -r run_${seed} -t %(tag)s -d %(decay_card)s -c %(shower_card)s -o ${TmpWorkDir}/%(name)s -f runMG5.txt
 
 # run MG5_aMC
 echo 'Start running mg5_aMC'
@@ -172,6 +175,8 @@ if args.pileup:
 else:
     vd['delphes_card'] = '${Delphes_Dir}/cards/delphes_card_CMS.tcl'
     vd['copy_minbias'] = '#'
+
+vd['event_type'] = args.event_type
 
 foutput = open(args.filename, 'w')
 foutput.write(setup_template % vd)

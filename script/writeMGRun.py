@@ -8,6 +8,9 @@ parser.add_argument('nevents', type=int,
                     help="Number of events to generate")
 parser.add_argument('-m', '--mode', choices=['LO', 'NLO'], default='NLO',
                     help="Leading Order or Next to Leading Order")
+parser.add_argument('-e', '--event-type', dest='event_type',
+                    choices=['ttbar', 'zprime'], default='ttbar',
+                    help="Which kind of events to generate")
 parser.add_argument('-f', '--filename', default='run_mg5_aMC.txt',
                     help="Name of the text file written by this script")
 parser.add_argument('-s', '--seed', default=0,
@@ -29,6 +32,7 @@ parser.add_argument('--delphes-card', dest='delphes_card', default=None,
 
 args = parser.parse_args()
 
+# SM ttbar (NLO)
 ttbar_aMCatNLO_template = """# MadGraph5 configuration
 # multicore mode
 set run_mode 2
@@ -53,6 +57,7 @@ set lhaid 260000 # NNPDF30_nlo_as_0118
 done
 """
 
+# SM ttbar (LO)
 ttbar_MG5_template = """# MadGraph5 configuration
 # multicore mode
 set run_mode 2
@@ -76,6 +81,36 @@ set lhaid 260000 # NNPDF30_nlo_as_0118
 %(madspin_card)s
 %(shower_card)s
 %(delphes_card)s
+done
+"""
+
+# Zprime->ttbar (NLO)
+zprime_NLO_template = """# MadGraph5 configuration
+# multicore mode
+set run_mode 2
+# number of cores, default None ( = all)
+set nb_core %(number_cores)s
+# import model
+import model VPrime_NLO
+# generate process
+generate p p > zp > t t~ [QCD]
+output %(outputdir)s
+launch -n %(run_name)s
+shower = PYTHIA8
+%(madspin_switch)s
+#order = NLO
+done
+set run_card nevents %(nevents)s
+set run_card iseed %(rng_seed)s
+set run_card run_tag %(tag_name)s
+set pdlabel lhapdf
+set lhaid 260000 # NNPDF30_nlo_as_0118
+# Zprime mass
+set param_card mzp 1500
+# Zprime width
+set param_card wzp 11.44220
+%(madspin_card)s
+%(shower_card)s
 done
 """
 
@@ -111,7 +146,11 @@ if args.ncores:
 else:
     vd['number_cores'] = 'None'
 
-if args.mode == 'NLO':
-    open(args.filename,'w').write(ttbar_aMCatNLO_template % vd)
-else:
-    open(args.filename,'w').write(ttbar_MG5_template % vd)
+
+if args.event_type == 'ttbar':
+    if args.mode == 'NLO':
+        open(args.filename,'w').write(ttbar_aMCatNLO_template % vd)
+    else:
+        open(args.filename,'w').write(ttbar_MG5_template % vd)
+elif args.event_type == 'zprime':
+    open(args.filename,'w').write(zprime_NLO_template % vd)
