@@ -54,6 +54,23 @@ For more usage exmaples, see also
     test/write_genTTbar.sh
     test/write_genTTbar_all.sh
 
+### Generate zprime -> ttbar events
+
+Download the model from
+http://feynrules.irmp.ucl.ac.be/wiki/WZPrimeAtNLO
+
+    wget http://feynrules.irmp.ucl.ac.be/raw-attachment/wiki/WZPrimeAtNLO/VPrime_NLO_UFO.tgz
+    tar -zxvf VPrime_NLO_UFO.tgz
+
+Place the model directory under `MG5_aMC/models/`
+
+    mv VPrime_NLO MG5_aMC/models/.
+
+Switch the generated event type to zprime via the command line option
+`-e` when running `script/writeJobFile.py`
+
+    python script/writeJobFile.py zprime_test -e zprime -f generateZprime.sh
+
 ### Make plots
 
 Make histograms from Delphes output files
